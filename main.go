@@ -21,8 +21,8 @@ type config struct {
 		SendChannel    string  `def:"dev-out"` // modify this to correct send channel, always use dev prefix as default
 	}
 	Log struct {
-		Level  string `def:"debug"`
-		Format string `def:"console"`
+		Level  string `def:"debug" help:"log level [debug|info|warn|error]"`
+		Format string `def:"console" help:"console|json"`
 	}
 	// add more configuration if needed
 }
