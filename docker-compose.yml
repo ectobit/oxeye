@@ -1,0 +1,23 @@
+version: '3.8'
+services:
+  nats:
+    image: nats:alpine
+    container_name: oxeye-nats
+    command:
+      - -js
+    ports:
+      - 8222:8222
+  oxeye:
+    image: acim/go-reflex
+    container_name: oxeye
+    restart: always
+    depends_on:
+      - nats
+    environment:
+      - RACE_DETECTOR=1
+    volumes:
+      - ./:/app
+    ports:
+      - 3000:3000
+    stdin_open: true
+    tty: true
