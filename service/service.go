@@ -3,6 +3,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -14,9 +15,14 @@ import (
 	"go.ectobit.com/oxeye/encdec"
 )
 
+// Errors.
+var (
+	ErrInvalidMessageType = errors.New("invalid message type")
+)
+
 // Job defines common job methods.
 type Job interface {
-	Execute(msg interface{}) interface{}
+	Execute(msg interface{}) (interface{}, error)
 	NewInMessage() interface{}
 }
 
@@ -85,7 +91,12 @@ func (s *Service) run(ctx context.Context, workerID uint8, messages <-chan broke
 				continue
 			}
 
-			outMsg := s.job.Execute(inMsg)
+			outMsg, err := s.job.Execute(inMsg)
+			if err != nil {
+				s.log.Warn("execute", lax.Error(err))
+
+				continue
+			}
 
 			out, err := s.ed.Encode(outMsg)
 			if err != nil {
