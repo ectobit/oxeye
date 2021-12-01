@@ -16,7 +16,7 @@ import (
 
 // Job defines common job methods.
 type Job interface {
-	Execute(msg interface{}, ack func()) interface{}
+	Execute(msg interface{}) interface{}
 	NewInMessage() interface{}
 }
 
@@ -56,53 +56,57 @@ func (s *Service) Run() error {
 		return fmt.Errorf("broker: %w", err)
 	}
 
-	s.wg.Add(int(s.concurrency))
-
 	for workerID := uint8(1); workerID <= s.concurrency; workerID++ {
-		go func(ctx context.Context, workerID uint8) {
-			s.log.Info("started", lax.Uint8("worker", workerID))
-
-			for {
-				select {
-				case msg := <-sub:
-					s.log.Debug("executing", lax.Uint8("worker", workerID))
-
-					inMsg := s.job.NewInMessage()
-
-					if err := s.ed.Decode(msg.Data, inMsg); err != nil {
-						s.log.Warn("decode", lax.String("type", fmt.Sprintf("%T", inMsg)),
-							lax.Uint8("worker", workerID), lax.Error(err))
-
-						continue
-					}
-
-					outMsg := s.job.Execute(inMsg, msg.Ack)
-
-					out, err := s.ed.Encode(outMsg)
-					if err != nil {
-						s.log.Warn("encode", lax.String("type", fmt.Sprintf("%T", outMsg)),
-							lax.Uint8("worker", workerID), lax.Error(err))
-
-						continue
-					}
-
-					if err := s.broker.Pub(out); err != nil {
-						s.log.Warn("broker", lax.Uint8("worker", workerID), lax.Error(err))
-					}
-				case <-ctx.Done():
-					s.log.Info("stopped", lax.Uint8("worker", workerID))
-					s.wg.Done()
-
-					return
-				}
-			}
-		}(ctx, workerID)
+		go s.run(ctx, workerID, sub)
 	}
 
 	<-signals
 	s.log.Info("graceful shutdown")
+	s.wg.Wait()
 
 	return nil
+}
+
+func (s *Service) run(ctx context.Context, workerID uint8, messages <-chan broker.Message) {
+	s.log.Info("started", lax.Uint8("worker", workerID))
+	s.wg.Add(1)
+
+	for {
+		select {
+		case msg := <-messages:
+			s.log.Debug("executing", lax.Uint8("worker", workerID))
+
+			inMsg := s.job.NewInMessage()
+
+			if err := s.ed.Decode(msg.Data, inMsg); err != nil {
+				s.log.Warn("decode", lax.String("type", fmt.Sprintf("%T", inMsg)),
+					lax.Uint8("worker", workerID), lax.Error(err))
+
+				continue
+			}
+
+			outMsg := s.job.Execute(inMsg)
+
+			out, err := s.ed.Encode(outMsg)
+			if err != nil {
+				s.log.Warn("encode", lax.String("type", fmt.Sprintf("%T", outMsg)),
+					lax.Uint8("worker", workerID), lax.Error(err))
+
+				continue
+			}
+
+			if err := s.broker.Pub(out); err != nil {
+				s.log.Warn("broker", lax.Uint8("worker", workerID), lax.Error(err))
+			}
+
+			msg.Ack()
+		case <-ctx.Done():
+			s.log.Info("stopped", lax.Uint8("worker", workerID))
+			s.wg.Done()
+
+			return
+		}
+	}
 }
 
 // Exit exits CLI application writing message and error to stderr.

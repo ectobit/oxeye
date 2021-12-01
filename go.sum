@@ -147,12 +147,8 @@ github.com/yuin/goldmark v1.3.5/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1
 github.com/zenazn/goji v0.9.0/go.mod h1:7S9M489iMyHBNxwZnk9/EHS098H4/F6TATF2mIxtB1Q=
 go.ectobit.com/act v0.2.2 h1:BeiOBAsSibUlSG3YTBg6JX6qIFh5gHvp98wW0haVhqk=
 go.ectobit.com/act v0.2.2/go.mod h1:SF98qeQrDXldXyTUZjkpTqx5uoOpAskIK5Zdnjwev/4=
-go.ectobit.com/lax v0.0.0-20211201005945-6a604e1cca2a h1:spC9jQKIQaHW99YkSWJ60Nx+SrGr/eP1mpc4fWC1hRc=
-go.ectobit.com/lax v0.0.0-20211201005945-6a604e1cca2a/go.mod h1:Rr1r6i/BQyvo9s4snuArmDFuZeSDBv0Tmtck5iibuVI=
-go.ectobit.com/lax v0.0.0-20211201015053-e940ff623b0c h1:HbY9xwHlMIVPzHHymxmcK+MVe/m4wZ8wMfL7nswwnz8=
-go.ectobit.com/lax v0.0.0-20211201015053-e940ff623b0c/go.mod h1:Rr1r6i/BQyvo9s4snuArmDFuZeSDBv0Tmtck5iibuVI=
-go.ectobit.com/lax v0.0.0-20211201021246-e6a88ed6eb15 h1:J26CyuCXjWuP9qEE+XGxmtrGt1UN7O0uBDoc/cz0iEs=
-go.ectobit.com/lax v0.0.0-20211201021246-e6a88ed6eb15/go.mod h1:Rr1r6i/BQyvo9s4snuArmDFuZeSDBv0Tmtck5iibuVI=
+go.ectobit.com/lax v0.0.0-20211201145546-6adabeadf2c5 h1:8pTsrznkhD7kWprcW/YmA6SgFgx5JzQ4MiTt/IO+WR0=
+go.ectobit.com/lax v0.0.0-20211201145546-6adabeadf2c5/go.mod h1:Rr1r6i/BQyvo9s4snuArmDFuZeSDBv0Tmtck5iibuVI=
 go.uber.org/atomic v1.3.2/go.mod h1:gD2HeocX3+yG+ygLZcrzQJaqmWj9AIm7n08wl/qW/PE=
 go.uber.org/atomic v1.4.0/go.mod h1:gD2HeocX3+yG+ygLZcrzQJaqmWj9AIm7n08wl/qW/PE=
 go.uber.org/atomic v1.5.0/go.mod h1:sABNBOSYdrvTF6hTgEIbc7YasKWGhgEQZyfxyTvoXHQ=

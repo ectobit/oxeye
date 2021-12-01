@@ -9,7 +9,6 @@ import (
 	"go.ectobit.com/oxeye/broker"
 	"go.ectobit.com/oxeye/encdec"
 	"go.ectobit.com/oxeye/service"
-	"go.uber.org/zap"
 )
 
 type config struct {
@@ -20,6 +19,10 @@ type config struct {
 		ClusterID      string  `def:"ff3"`
 		ReceiveChannel string  `def:"dev-in"`  // modify this to correct receive channel, always use dev prefix as default
 		SendChannel    string  `def:"dev-out"` // modify this to correct send channel, always use dev prefix as default
+	}
+	Log struct {
+		Level  string `def:"debug"`
+		Format string `def:"console"`
 	}
 	// add more configuration if needed
 }
@@ -60,7 +63,10 @@ func main() {
 	// 	panic(err)
 	// }
 
-	log := lax.NewZapAdapter(zap.NewExample())
+	log, err := lax.NewDefaultZapAdapter(cfg.Log.Format, cfg.Log.Level)
+	if err != nil {
+		service.Exit("create logger", err)
+	}
 
 	brConfig := &broker.NatsJetStreamConfig{ //nolint:exhaustivestruct
 		ConsumeSubject: "OXEYE.in",

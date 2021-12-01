@@ -6,8 +6,7 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/nats-io/nats.go v1.13.1-0.20211018182449-f2416a8b1483
 	go.ectobit.com/act v0.2.2
-	go.ectobit.com/lax v0.0.0-20211201021246-e6a88ed6eb15
-	go.uber.org/zap v1.19.1
+	go.ectobit.com/lax v0.0.0-20211201145546-6adabeadf2c5
 )
 
 require (
@@ -29,6 +28,7 @@ require (
 	github.com/nats-io/nuid v1.0.1 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
+	go.uber.org/zap v1.19.1 // indirect
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
 	golang.org/x/sys v0.0.0-20211013075003-97ac67df715c // indirect
 	golang.org/x/text v0.3.6 // indirect

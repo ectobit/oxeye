@@ -21,7 +21,7 @@ func newJob(log lax.Logger) *job {
 	return &job{log: log}
 }
 
-func (j *job) Execute(msg interface{}, ack func()) interface{} {
+func (j *job) Execute(msg interface{}) interface{} {
 	msg, ok := msg.(*inMsg)
 	if !ok {
 		j.log.Warn("assure message", lax.String("invalid type", fmt.Sprintf("%T", msg)))
@@ -31,8 +31,6 @@ func (j *job) Execute(msg interface{}, ack func()) interface{} {
 
 	// do something with in
 	_ = msg
-
-	ack() // don't forget to call ack on success
 
 	return &outMsg{}
 }
