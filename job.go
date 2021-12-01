@@ -24,8 +24,6 @@ func newJob(log lax.Logger) *job {
 func (j *job) Execute(msg interface{}) (interface{}, error) {
 	msg, ok := msg.(*inMsg)
 	if !ok {
-		j.log.Warn("assure message", lax.String("invalid type", fmt.Sprintf("%T", msg)))
-
 		return nil, fmt.Errorf("%w: %T", service.ErrInvalidMessageType, msg)
 	}
 
@@ -37,8 +35,4 @@ func (j *job) Execute(msg interface{}) (interface{}, error) {
 
 func (j *job) NewInMessage() interface{} {
 	return &inMsg{}
-}
-
-func (j *job) NewOutMessage() interface{} {
-	return &outMsg{}
 }
