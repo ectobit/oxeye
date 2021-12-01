@@ -16,13 +16,13 @@ type config struct {
 	Concurrency uint   `def:"5"`
 	NATS        struct {
 		ClusterURL     act.URL `def:"nats://nats:4222"`
-		ClusterID      string  `def:"ff3"`
-		ReceiveChannel string  `def:"dev-in"`  // modify this to correct receive channel, always use dev prefix as default
-		SendChannel    string  `def:"dev-out"` // modify this to correct send channel, always use dev prefix as default
+		ConsumeSubject string  `def:"OXEYE.in"`  // modify this to correct receive channel
+		ConsumerGroup  string  `def:"oxeye"`     // modify this to correct consumer group
+		ProduceSubject string  `def:"OXEYE.out"` // modify this to correct send channel
 	}
 	Log struct {
-		Level  string `def:"debug" help:"log level [debug|info|warn|error]"`
-		Format string `def:"console" help:"console|json"`
+		Level  string `help:"log level [debug|info|warn|error]" def:"debug"`
+		Format string `help:"console|json" def:"console"`
 	}
 	// add more configuration if needed
 }
@@ -69,9 +69,9 @@ func main() {
 	}
 
 	brConfig := &broker.NatsJetStreamConfig{ //nolint:exhaustivestruct
-		ConsumeSubject: "OXEYE.in",
-		ConsumerGroup:  "oxeye",
-		ProduceSubject: "OXEYE.out",
+		ConsumeSubject: cfg.NATS.ConsumeSubject,
+		ConsumerGroup:  cfg.NATS.ConsumerGroup,
+		ProduceSubject: cfg.NATS.ProduceSubject,
 	}
 	br := broker.NewNatsJetStream(jetStream, brConfig, log)
 
