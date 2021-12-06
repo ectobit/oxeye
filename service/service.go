@@ -122,6 +122,6 @@ func (s *Service) run(ctx context.Context, workerID uint8, messages <-chan broke
 
 // Exit exits CLI application writing message and error to stderr.
 func Exit(message string, err error) {
-	fmt.Fprintf(os.Stderr, "%s: %v", message, err)
+	fmt.Fprintf(os.Stderr, "%s: %v\n", message, err)
 	os.Exit(1)
 }
