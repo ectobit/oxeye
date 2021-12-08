@@ -65,10 +65,11 @@ func (b *NatsJetStream) Sub(ctx context.Context) (<-chan Message, error) {
 
 	if b.config.ConsumerGroup != "" {
 		sub, err = b.c.ChanQueueSubscribe(b.config.ConsumeSubject, b.config.ConsumerGroup, natsCh,
-			nats.ManualAck(), nats.AckWait(b.config.AckWait), nats.MaxDeliver(int(b.config.MaxRedeliveries)))
+			nats.ManualAck(), nats.AckWait(b.config.AckWait), nats.MaxDeliver(int(b.config.MaxRedeliveries)),
+			nats.DeliverNew())
 	} else {
 		sub, err = b.c.ChanSubscribe(b.config.ConsumeSubject, natsCh, nats.ManualAck(),
-			nats.AckWait(b.config.AckWait))
+			nats.AckWait(b.config.AckWait), nats.DeliverNew())
 	}
 
 	if err != nil {
