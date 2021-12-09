@@ -4,9 +4,9 @@ go 1.17
 
 require (
 	github.com/json-iterator/go v1.1.12
-	github.com/nats-io/nats.go v1.13.1-0.20211018182449-f2416a8b1483
+	github.com/nats-io/nats.go v1.13.0
 	go.ectobit.com/act v0.2.2
-	go.ectobit.com/lax v0.0.0-20211201145546-6adabeadf2c5
+	go.ectobit.com/lax v0.0.0-20211209220847-12e74df0a8d3
 )
 
 require (
@@ -23,7 +23,7 @@ require (
 	github.com/lib/pq v1.10.4 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/nats-io/nats-server/v2 v2.6.5 // indirect
+	github.com/nats-io/nats-server/v2 v2.6.2 // indirect
 	github.com/nats-io/nkeys v0.3.0 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
