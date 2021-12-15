@@ -23,7 +23,6 @@ var (
 // Job defines common job methods.
 type Job[IN, OUT any] interface {
 	Execute(msg IN) OUT
-	NewInMessage() IN
 }
 
 // Service is a multithreaded service with configurable job to be executed.

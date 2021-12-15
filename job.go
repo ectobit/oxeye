@@ -15,17 +15,9 @@ type job struct {
 	log lax.Logger
 }
 
-func newJob(log lax.Logger) *job {
-	return &job{log: log}
-}
-
 func (j *job) Execute(msg *InMsg) *OutMsg {
 	// do something with msg
 	_ = msg
 
 	return &OutMsg{}
-}
-
-func (j *job) NewInMessage() *InMsg {
-	return &InMsg{}
 }
