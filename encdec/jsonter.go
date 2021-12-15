@@ -10,7 +10,7 @@ import (
 type JSONIter struct{}
 
 // Encode encodes provided pointer to a value to slice of bytes using JSON encoding.
-func (ed *JSONIter) Encode(v interface{}) ([]byte, error) {
+func (ed *JSONIter) Encode(v any) ([]byte, error) {
 	out, err := jsoniter.Marshal(v)
 	if err != nil {
 		return nil, fmt.Errorf("encode: %w", err)
@@ -20,7 +20,7 @@ func (ed *JSONIter) Encode(v interface{}) ([]byte, error) {
 }
 
 // Decode decodes provided bytes slice into provided pointer to a value using JSON decoding.
-func (ed *JSONIter) Decode(data []byte, v interface{}) error {
+func (ed *JSONIter) Decode(data []byte, v any) error {
 	if err := jsoniter.Unmarshal(data, v); err != nil {
 		return fmt.Errorf("decode: %w", err)
 	}
