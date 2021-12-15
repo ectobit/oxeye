@@ -1,9 +1,9 @@
 # syntax=docker/dockerfile:1.3
-FROM golang:1.17.6-alpine AS builder
+FROM golang:1.18-rc-alpine AS builder
 
 RUN --mount=type=cache,target=/var/cache/apk if [ "${TARGETPLATFORM}" = "linux/amd64" ]; \
-    then apk add --no-cache tzdata upx; \
-    else apk add --no-cache tzdata; fi
+    then apk add --no-cache git tzdata upx; \
+    else apk add --no-cache git tzdata; fi
 
 WORKDIR /app
 COPY go.mod go.sum ./
