@@ -21,24 +21,23 @@ var (
 )
 
 // Job defines common job methods.
-type Job interface {
-	Execute(msg interface{}) (interface{}, error)
-	NewInMessage() interface{}
+type Job[IN, OUT any] interface {
+	Execute(msg IN) OUT
 }
 
 // Service is a multithreaded service with configurable job to be executed.
-type Service struct {
+type Service[IN, OUT any] struct {
 	concurrency uint8
 	broker      broker.Broker
 	wg          sync.WaitGroup
-	job         Job
+	job         Job[IN, OUT]
 	ed          encdec.EncDecoder
 	log         lax.Logger
 }
 
 // NewService creates new service.
-func NewService(concurrency uint8, broker broker.Broker, job Job, ed encdec.EncDecoder, log lax.Logger) *Service {
-	return &Service{ //nolint:exhaustivestruct
+func NewService[IN, OUT any](concurrency uint8, broker broker.Broker, job Job[IN, OUT], ed encdec.EncDecoder, log lax.Logger) *Service[IN, OUT] {
+	return &Service[IN, OUT]{ //nolint:exhaustivestruct
 		concurrency: concurrency,
 		broker:      broker,
 		job:         job,
@@ -48,7 +47,7 @@ func NewService(concurrency uint8, broker broker.Broker, job Job, ed encdec.EncD
 }
 
 // Run executes service reacting on termination signals for graceful shutdown.
-func (s *Service) Run() error {
+func (s *Service[IN, OUT]) Run() error {
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 
@@ -73,7 +72,7 @@ func (s *Service) Run() error {
 	return nil
 }
 
-func (s *Service) run(ctx context.Context, workerID uint8, messages <-chan broker.Message) {
+func (s *Service[IN, OUT]) run(ctx context.Context, workerID uint8, messages <-chan broker.Message) {
 	s.log.Info("started", lax.Uint8("worker", workerID))
 	s.wg.Add(1)
 
@@ -82,7 +81,7 @@ func (s *Service) run(ctx context.Context, workerID uint8, messages <-chan broke
 		case msg := <-messages:
 			s.log.Debug("executing", lax.Uint8("worker", workerID))
 
-			inMsg := s.job.NewInMessage()
+			var inMsg IN
 
 			if err := s.ed.Decode(msg.Data, inMsg); err != nil {
 				s.log.Warn("decode", lax.String("type", fmt.Sprintf("%T", inMsg)),
@@ -91,12 +90,7 @@ func (s *Service) run(ctx context.Context, workerID uint8, messages <-chan broke
 				continue
 			}
 
-			outMsg, err := s.job.Execute(inMsg)
-			if err != nil {
-				s.log.Warn("execute", lax.Error(err))
-
-				continue
-			}
+			outMsg := s.job.Execute(inMsg)
 
 			out, err := s.ed.Encode(outMsg)
 			if err != nil {

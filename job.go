@@ -1,38 +1,23 @@
 package main
 
 import (
-	"fmt"
-
 	"go.ectobit.com/lax"
 	"go.ectobit.com/oxeye/service"
 )
 
-type inMsg struct{}
+type InMsg struct{}
 
-type outMsg struct{}
+type OutMsg struct{}
 
-var _ service.Job = (*job)(nil)
+var _ service.Job[*InMsg, *OutMsg] = (*Job)(nil)
 
-type job struct {
+type Job struct {
 	log lax.Logger
 }
 
-func newJob(log lax.Logger) *job {
-	return &job{log: log}
-}
-
-func (j *job) Execute(msg interface{}) (interface{}, error) {
-	msg, ok := msg.(*inMsg)
-	if !ok {
-		return nil, fmt.Errorf("%w: %T", service.ErrInvalidMessageType, msg)
-	}
-
-	// do something with in
+func (j *Job) Execute(msg *InMsg) *OutMsg {
+	// do something with msg
 	_ = msg
 
-	return &outMsg{}, nil
-}
-
-func (j *job) NewInMessage() interface{} {
-	return &inMsg{}
+	return &OutMsg{}
 }

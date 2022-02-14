@@ -9,7 +9,7 @@ import (
 type JSON struct{}
 
 // Encode encodes provided pointer to a value to slice of bytes using JSON encoding.
-func (ed *JSON) Encode(v interface{}) ([]byte, error) {
+func (ed *JSON) Encode(v any) ([]byte, error) {
 	out, err := json.Marshal(v)
 	if err != nil {
 		return nil, fmt.Errorf("encode: %w", err)
@@ -19,7 +19,7 @@ func (ed *JSON) Encode(v interface{}) ([]byte, error) {
 }
 
 // Decode decodes provided bytes slice into provided pointer to a value using JSON decoding.
-func (ed *JSON) Decode(data []byte, v interface{}) error {
+func (ed *JSON) Decode(data []byte, v any) error {
 	if err := json.Unmarshal(data, v); err != nil {
 		return fmt.Errorf("decode: %w", err)
 	}
