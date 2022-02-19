@@ -5,8 +5,8 @@ go 1.18
 require (
 	github.com/json-iterator/go v1.1.12
 	github.com/nats-io/nats.go v1.13.0
-	go.ectobit.com/act v0.2.2
-	go.ectobit.com/lax v0.0.0-20220208012111-dec7585d0ee6
+	go.ectobit.com/act v0.2.3
+	go.ectobit.com/lax v0.0.0-20220219091834-a31442c705c6
 )
 
 require (
