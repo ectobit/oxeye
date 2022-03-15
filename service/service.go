@@ -81,16 +81,16 @@ func (s *Service[IN, OUT]) run(ctx context.Context, workerID uint8, messages <-c
 		case msg := <-messages:
 			s.log.Debug("executing", lax.Uint8("worker", workerID))
 
-			var inMsg *IN
+			var inMsg IN
 
-			if err := s.ed.Decode(msg.Data, inMsg); err != nil {
+			if err := s.ed.Decode(msg.Data, &inMsg); err != nil {
 				s.log.Warn("decode", lax.String("type", fmt.Sprintf("%T", inMsg)),
 					lax.Uint8("worker", workerID), lax.Error(err))
 
 				continue
 			}
 
-			outMsg := s.job.Execute(inMsg)
+			outMsg := s.job.Execute(&inMsg)
 
 			if outMsg == nil {
 				continue
