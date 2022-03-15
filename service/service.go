@@ -22,7 +22,7 @@ var (
 
 // Job defines common job methods.
 type Job[IN, OUT any] interface {
-	Execute(msg IN) OUT
+	Execute(msg IN) error
 }
 
 // Service is a multithreaded service with configurable job to be executed.
@@ -90,21 +90,14 @@ func (s *Service[IN, OUT]) run(ctx context.Context, workerID uint8, messages <-c
 				continue
 			}
 
-			outMsg := s.job.Execute(inMsg)
-
-			out, err := s.ed.Encode(outMsg)
-			if err != nil {
-				s.log.Warn("encode", lax.String("type", fmt.Sprintf("%T", outMsg)),
-					lax.Uint8("worker", workerID), lax.Error(err))
+			if err := s.job.Execute(inMsg); err != nil {
+				s.log.Debug("execute", lax.Uint8("worker", workerID), lax.Error(err))
 
 				continue
 			}
 
-			if err := s.broker.Pub(out); err != nil {
-				s.log.Warn("broker", lax.Uint8("worker", workerID), lax.Error(err))
-			}
-
 			msg.Ack()
+
 		case <-ctx.Done():
 			s.log.Info("stopped", lax.Uint8("worker", workerID))
 			s.wg.Done()
@@ -118,4 +111,8 @@ func (s *Service[IN, OUT]) run(ctx context.Context, workerID uint8, messages <-c
 func Exit(message string, err error) {
 	fmt.Fprintf(os.Stderr, "%s: %v\n", message, err)
 	os.Exit(1)
+}
+
+func isNotNil(msg interface{}) bool {
+	return msg != nil
 }
