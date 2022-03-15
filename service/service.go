@@ -22,7 +22,7 @@ var (
 
 // Job defines common job methods.
 type Job[IN, OUT any] interface {
-	Execute(msg IN) OUT
+	Execute(msg *IN) *OUT
 }
 
 // Service is a multithreaded service with configurable job to be executed.
@@ -81,7 +81,7 @@ func (s *Service[IN, OUT]) run(ctx context.Context, workerID uint8, messages <-c
 		case msg := <-messages:
 			s.log.Debug("executing", lax.Uint8("worker", workerID))
 
-			var inMsg IN
+			var inMsg *IN
 
 			if err := s.ed.Decode(msg.Data, inMsg); err != nil {
 				s.log.Warn("decode", lax.String("type", fmt.Sprintf("%T", inMsg)),
@@ -91,6 +91,10 @@ func (s *Service[IN, OUT]) run(ctx context.Context, workerID uint8, messages <-c
 			}
 
 			outMsg := s.job.Execute(inMsg)
+
+			if outMsg == nil {
+				continue
+			}
 
 			out, err := s.ed.Encode(outMsg)
 			if err != nil {

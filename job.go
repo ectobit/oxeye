@@ -9,7 +9,7 @@ type InMsg struct{}
 
 type OutMsg struct{}
 
-var _ service.Job[*InMsg, *OutMsg] = (*Job)(nil)
+var _ service.Job[InMsg, OutMsg] = (*Job)(nil)
 
 type Job struct {
 	log lax.Logger

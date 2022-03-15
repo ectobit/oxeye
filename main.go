@@ -75,7 +75,7 @@ func main() {
 	}
 	br := broker.NewNatsJetStream(jetStream, brConfig, log)
 
-	srv := service.NewService[*InMsg, *OutMsg](uint8(cfg.Concurrency), br, &Job{log: log}, &encdec.JSONIter{}, log)
+	srv := service.NewService[InMsg, OutMsg](uint8(cfg.Concurrency), br, &Job{log: log}, &encdec.JSONIter{}, log)
 
 	if err := srv.Run(); err != nil {
 		service.Exit("service run", err)
