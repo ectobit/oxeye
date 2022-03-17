@@ -7,8 +7,6 @@
 
 Concurrent microservice in Go using message broker to receive jobs and send results.
 
-:warning: :construction: This project is still under construction, don't try to use it.
-
 ## Contribution
 
 - `make lint` lints the project
