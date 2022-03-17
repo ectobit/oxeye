@@ -90,6 +90,8 @@ func (s *Service[IN, OUT]) run(ctx context.Context, workerID uint8, messages <-c
 				continue
 			}
 
+			msg.InProgress()
+
 			outMsg := s.job.Execute(&inMsg)
 
 			if outMsg == nil {

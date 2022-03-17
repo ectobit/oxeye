@@ -5,8 +5,9 @@ import "context"
 
 // Message contains data from the broker.
 type Message struct {
-	Data []byte
-	Ack  func()
+	Data       []byte
+	Ack        func()
+	InProgress func()
 }
 
 // Broker defines common broker methods.

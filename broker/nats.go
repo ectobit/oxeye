@@ -87,6 +87,11 @@ func (b *NatsJetStream) Sub(ctx context.Context) (<-chan Message, error) {
 							b.log.Warn("ack", lax.Error(err))
 						}
 					},
+					InProgress: func() {
+						if err := msg.InProgress(); err != nil {
+							b.log.Warn("in progress", lax.Error(err))
+						}
+					},
 				}
 			case <-ctx.Done():
 				b.log.Info("stopping consumer")
