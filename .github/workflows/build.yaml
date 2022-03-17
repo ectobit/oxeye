@@ -12,7 +12,6 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: 1.18.0
-          stable: false
       - name: Set up cache
         uses: actions/cache@v2.1.7
         with:
