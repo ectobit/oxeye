@@ -31,7 +31,7 @@ jobs:
           make lint || true
           go list -json -m all | nancy sleuth
       - name: Lint Dockerfile
-        uses: hadolint/hadolint-action@v2.0.0
+        uses: hadolint/hadolint-action@v2.1.0
         with:
           dockerfile: Dockerfile
           ignore: DL3018
