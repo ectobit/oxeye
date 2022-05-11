@@ -30,7 +30,7 @@ func TestJSONDecode(t *testing.T) {
 
 	ed := &encdec.JSON{}
 
-	got := &msg{} //nolint:exhaustivestruct
+	got := &msg{} //nolint:exhaustruct
 
 	if err := ed.Decode(jsonData(), got); err != nil {
 		t.Error(err)

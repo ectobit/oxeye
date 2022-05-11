@@ -36,12 +36,14 @@ type Service[IN, OUT any] struct {
 }
 
 // NewService creates new service.
-func NewService[IN, OUT any](concurrency uint8, broker broker.Broker, job Job[IN, OUT], ed encdec.EncDecoder, log lax.Logger) *Service[IN, OUT] {
-	return &Service[IN, OUT]{ //nolint:exhaustivestruct
+func NewService[IN, OUT any](concurrency uint8, broker broker.Broker, job Job[IN, OUT], endDec encdec.EncDecoder,
+	log lax.Logger,
+) *Service[IN, OUT] {
+	return &Service[IN, OUT]{
 		concurrency: concurrency,
 		broker:      broker,
 		job:         job,
-		ed:          ed,
+		ed:          endDec,
 		log:         log,
 	}
 }

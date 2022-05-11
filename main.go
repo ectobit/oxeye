@@ -35,7 +35,7 @@ type config struct {
 // Makefile and README.md. Of course, you should edit all of them and adapt for your microservice.
 // Your job implementation should be in job.go and your main.go will probably be very similar to the provided one.
 func main() {
-	cfg := &config{} //nolint:exhaustivestruct
+	cfg := &config{} //nolint:exhaustruct
 
 	// change service name to a proper one
 	cli := act.New("oxeye")
@@ -68,7 +68,7 @@ func main() {
 		service.Exit("create logger", err)
 	}
 
-	brConfig := &broker.NatsJetStreamConfig{ //nolint:exhaustivestruct
+	brConfig := &broker.NatsJetStreamConfig{ //nolint:exhaustruct
 		ConsumeSubject: cfg.NATS.ConsumeSubject,
 		ConsumerGroup:  cfg.NATS.ConsumerGroup,
 		ProduceSubject: cfg.NATS.ProduceSubject,
