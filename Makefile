@@ -4,8 +4,7 @@ encdec-bench:
 	cd encdec && go test -bench=. -benchmem
 
 lint:
-	@golangci-lint run --exclude-use-default=false --enable-all \
-		--disable exhaustivestruct
+	@golangci-lint run
 
 start:
 	@docker-compose up --build
