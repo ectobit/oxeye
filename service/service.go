@@ -97,6 +97,8 @@ func (s *Service[IN, OUT]) run(ctx context.Context, workerID uint8, messages <-c
 			outMsg := s.job.Execute(&inMsg)
 
 			if outMsg == nil {
+				msg.Ack()
+
 				continue
 			}
 
