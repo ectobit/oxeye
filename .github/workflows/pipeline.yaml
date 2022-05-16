@@ -9,8 +9,6 @@ jobs:
     uses: ectobit/reusable-workflows/.github/workflows/go-check.yaml@main
     with:
       test-command: make test
-      hadolint: true
-      hadolint-ignore: DL3018
   # test: # example how nats may be used for real testing
   #   runs-on: ubuntu-latest
   #   needs: lint
