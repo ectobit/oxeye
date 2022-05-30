@@ -1,7 +1,4 @@
-.PHONY: encdec-bench lint start stop test test-cov
-
-encdec-bench:
-	cd encdec && go test -bench=. -benchmem
+.PHONY: lint start stop test test-cov
 
 lint:
 	@golangci-lint run

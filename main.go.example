@@ -7,7 +7,6 @@ import (
 	"go.ectobit.com/act"
 	"go.ectobit.com/lax"
 	"go.ectobit.com/oxeye/broker"
-	"go.ectobit.com/oxeye/encdec"
 	"go.ectobit.com/oxeye/service"
 )
 
@@ -54,7 +53,7 @@ func main() {
 		service.Exit("nats jet stream", err)
 	}
 
-	// Create stream (check if this is idempotent)
+	// Create stream
 	// _, err := js.AddStream(&nats.StreamConfig{
 	// 	Name:     "OXEYE",
 	// 	Subjects: []string{"OXEYE.*"},
@@ -75,7 +74,7 @@ func main() {
 	}
 	br := broker.NewNatsJetStream(jetStream, brConfig, log)
 
-	srv := service.NewService[InMsg, OutMsg](uint8(cfg.Concurrency), br, &Job{log: log}, &encdec.JSONIter{}, log)
+	srv := service.NewService[InMsg, OutMsg](uint8(cfg.Concurrency), br, &Job{log: log}, log)
 
 	if err := srv.Run(); err != nil {
 		service.Exit("service run", err)

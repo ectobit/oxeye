@@ -3,6 +3,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -12,7 +13,6 @@ import (
 
 	"go.ectobit.com/lax"
 	"go.ectobit.com/oxeye/broker"
-	"go.ectobit.com/oxeye/encdec"
 )
 
 // Errors.
@@ -31,19 +31,15 @@ type Service[IN, OUT any] struct {
 	broker      broker.Broker
 	wg          sync.WaitGroup
 	job         Job[IN, OUT]
-	ed          encdec.EncDecoder
 	log         lax.Logger
 }
 
 // NewService creates new service.
-func NewService[IN, OUT any](concurrency uint8, broker broker.Broker, job Job[IN, OUT], endDec encdec.EncDecoder,
-	log lax.Logger,
-) *Service[IN, OUT] {
+func NewService[IN, OUT any](concurrency uint8, broker broker.Broker, job Job[IN, OUT], log lax.Logger) *Service[IN, OUT] {
 	return &Service[IN, OUT]{
 		concurrency: concurrency,
 		broker:      broker,
 		job:         job,
-		ed:          endDec,
 		log:         log,
 	}
 }
@@ -85,7 +81,7 @@ func (s *Service[IN, OUT]) run(ctx context.Context, workerID uint8, messages <-c
 
 			var inMsg IN
 
-			if err := s.ed.Decode(msg.Data, &inMsg); err != nil {
+			if err := json.Unmarshal(msg.Data, &inMsg); err != nil {
 				s.log.Warn("decode", lax.String("type", fmt.Sprintf("%T", inMsg)),
 					lax.Uint8("worker", workerID), lax.Error(err))
 
@@ -102,7 +98,7 @@ func (s *Service[IN, OUT]) run(ctx context.Context, workerID uint8, messages <-c
 				continue
 			}
 
-			out, err := s.ed.Encode(outMsg)
+			out, err := json.Marshal(outMsg)
 			if err != nil {
 				s.log.Warn("encode", lax.String("type", fmt.Sprintf("%T", outMsg)),
 					lax.Uint8("worker", workerID), lax.Error(err))
