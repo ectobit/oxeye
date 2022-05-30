@@ -1,7 +1,12 @@
 .PHONY: lint start stop test test-cov
 
 lint:
-	@golangci-lint run
+	@golangci-lint run --exclude-use-default=false --enable-all \
+		--disable golint \
+		--disable interfacer \
+		--disable maligned \
+		--disable scopelint \
+	    --disable exhaustivestruct
 
 start:
 	@docker-compose up --build

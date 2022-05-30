@@ -85,24 +85,24 @@ func (b *NatsJetStream) Sub(ctx context.Context) (<-chan Message, error) {
 					Data: msg.Data,
 					Ack: func() {
 						if err := msg.Ack(); err != nil {
-							b.Debug.WriteString(fmt.Sprintf("ack: %s", err))
+							b.Debug.WriteString(fmt.Sprintf("ack: %s", err)) //nolint:errcheck
 						}
 					},
 					InProgress: func() {
 						if err := msg.InProgress(); err != nil {
-							b.Debug.WriteString(fmt.Sprintf("in progress: %s", err))
+							b.Debug.WriteString(fmt.Sprintf("in progress: %s", err)) //nolint:errcheck
 						}
 					},
 				}
 			case <-ctx.Done():
-				b.Debug.WriteString("stopping consumer")
+				b.Debug.WriteString("stopping consumer") //nolint:errcheck
 
 				if err := sub.Unsubscribe(); err != nil {
-					b.Debug.WriteString(fmt.Sprintf("unsubscribe: %s", err))
+					b.Debug.WriteString(fmt.Sprintf("unsubscribe: %s", err)) //nolint:errcheck
 				}
 
 				if err := sub.Drain(); err != nil {
-					b.Debug.WriteString(fmt.Sprintf("drain: %s", err))
+					b.Debug.WriteString(fmt.Sprintf("drain: %s", err)) //nolint:errcheck
 				}
 
 				close(natsCh)
@@ -123,7 +123,7 @@ func (b *NatsJetStream) Pub(data []byte) error {
 		return fmt.Errorf("publish: %w", err)
 	}
 
-	b.Debug.WriteString(fmt.Sprintf("publish stream: %s sequence: %d", pub.Stream, pub.Sequence))
+	b.Debug.WriteString(fmt.Sprintf("publish stream: %s sequence: %d", pub.Stream, pub.Sequence)) //nolint:errcheck
 
 	return nil
 }
