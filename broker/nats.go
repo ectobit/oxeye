@@ -51,7 +51,7 @@ func NewNatsJetStream(client nats.JetStreamContext, config *NatsJetStreamConfig)
 	return &NatsJetStream{
 		c:      client,
 		config: config,
-		Debug:  io.Discard.(io.StringWriter),
+		Debug:  io.Discard.(io.StringWriter), //nolint:errcheck
 	}
 }
 
