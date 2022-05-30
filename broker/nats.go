@@ -3,10 +3,10 @@ package broker
 import (
 	"context"
 	"fmt"
+	"io"
 	"time"
 
 	"github.com/nats-io/nats.go"
-	"go.ectobit.com/lax"
 )
 
 const (
@@ -17,10 +17,11 @@ const (
 var _ Broker = (*NatsJetStream)(nil)
 
 // NatsJetStream implements Broker interface for NATS JetStream broker.
+// Exported field Debug can be used for debugging.
 type NatsJetStream struct {
 	c      nats.JetStreamContext
 	config *NatsJetStreamConfig
-	log    lax.Logger
+	Debug  io.StringWriter
 }
 
 // NatsJetStreamConfig contains NatsJetStream configuration parameters.
@@ -38,7 +39,7 @@ type NatsJetStreamConfig struct {
 }
 
 // NewNatsJetStream creates new NATS JetStream broker.
-func NewNatsJetStream(client nats.JetStreamContext, config *NatsJetStreamConfig, log lax.Logger) *NatsJetStream {
+func NewNatsJetStream(client nats.JetStreamContext, config *NatsJetStreamConfig) *NatsJetStream {
 	if config.AckWait == 0 {
 		config.AckWait = defaultAckWait
 	}
@@ -50,7 +51,7 @@ func NewNatsJetStream(client nats.JetStreamContext, config *NatsJetStreamConfig,
 	return &NatsJetStream{
 		c:      client,
 		config: config,
-		log:    log,
+		Debug:  io.Discard.(io.StringWriter),
 	}
 }
 
@@ -84,24 +85,24 @@ func (b *NatsJetStream) Sub(ctx context.Context) (<-chan Message, error) {
 					Data: msg.Data,
 					Ack: func() {
 						if err := msg.Ack(); err != nil {
-							b.log.Warn("ack", lax.Error(err))
+							b.Debug.WriteString(fmt.Sprintf("ack: %s", err))
 						}
 					},
 					InProgress: func() {
 						if err := msg.InProgress(); err != nil {
-							b.log.Warn("in progress", lax.Error(err))
+							b.Debug.WriteString(fmt.Sprintf("in progress: %s", err))
 						}
 					},
 				}
 			case <-ctx.Done():
-				b.log.Info("stopping consumer")
+				b.Debug.WriteString("stopping consumer")
 
 				if err := sub.Unsubscribe(); err != nil {
-					b.log.Warn("unsubscribe: %w", lax.Error(err))
+					b.Debug.WriteString(fmt.Sprintf("unsubscribe: %s", err))
 				}
 
 				if err := sub.Drain(); err != nil {
-					b.log.Warn("drain: %w", lax.Error(err))
+					b.Debug.WriteString(fmt.Sprintf("drain: %s", err))
 				}
 
 				close(natsCh)
@@ -122,7 +123,7 @@ func (b *NatsJetStream) Pub(data []byte) error {
 		return fmt.Errorf("publish: %w", err)
 	}
 
-	b.log.Debug("publish", lax.String("stream", pub.Stream), lax.Uint64("sequence", pub.Sequence))
+	b.Debug.WriteString(fmt.Sprintf("publish stream: %s sequence: %d", pub.Stream, pub.Sequence))
 
 	return nil
 }

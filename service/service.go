@@ -6,12 +6,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 
-	"go.ectobit.com/lax"
 	"go.ectobit.com/oxeye/broker"
 )
 
@@ -31,16 +31,16 @@ type Service[IN, OUT any] struct {
 	broker      broker.Broker
 	wg          sync.WaitGroup
 	job         Job[IN, OUT]
-	log         lax.Logger
+	Debug       io.StringWriter
 }
 
 // NewService creates new service.
-func NewService[IN, OUT any](concurrency uint8, broker broker.Broker, job Job[IN, OUT], log lax.Logger) *Service[IN, OUT] {
+func NewService[IN, OUT any](concurrency uint8, broker broker.Broker, job Job[IN, OUT]) *Service[IN, OUT] {
 	return &Service[IN, OUT]{
 		concurrency: concurrency,
 		broker:      broker,
 		job:         job,
-		log:         log,
+		Debug:       io.Discard.(io.StringWriter),
 	}
 }
 
@@ -52,7 +52,7 @@ func (s *Service[IN, OUT]) Run() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	s.log.Info("starting worker pool", lax.Uint8("concurrency", s.concurrency))
+	s.Debug.WriteString(fmt.Sprintf("starting worker pool with %d workers", s.concurrency))
 
 	sub, err := s.broker.Sub(ctx)
 	if err != nil {
@@ -64,26 +64,25 @@ func (s *Service[IN, OUT]) Run() error {
 	}
 
 	<-signals
-	s.log.Info("graceful shutdown")
+	s.Debug.WriteString("graceful shutdown")
 	s.wg.Wait()
 
 	return nil
 }
 
 func (s *Service[IN, OUT]) run(ctx context.Context, workerID uint8, messages <-chan broker.Message) {
-	s.log.Info("started", lax.Uint8("worker", workerID))
+	s.Debug.WriteString(fmt.Sprintf("starting worker %d", workerID))
 	s.wg.Add(1)
 
 	for {
 		select {
 		case msg := <-messages:
-			s.log.Debug("executing", lax.Uint8("worker", workerID))
+			s.Debug.WriteString(fmt.Sprintf("worker %d executing job", workerID))
 
 			var inMsg IN
 
 			if err := json.Unmarshal(msg.Data, &inMsg); err != nil {
-				s.log.Warn("decode", lax.String("type", fmt.Sprintf("%T", inMsg)),
-					lax.Uint8("worker", workerID), lax.Error(err))
+				s.Debug.WriteString(fmt.Sprintf("worker %d decoding message type %T: %v", workerID, inMsg, err))
 
 				continue
 			}
@@ -100,19 +99,18 @@ func (s *Service[IN, OUT]) run(ctx context.Context, workerID uint8, messages <-c
 
 			out, err := json.Marshal(outMsg)
 			if err != nil {
-				s.log.Warn("encode", lax.String("type", fmt.Sprintf("%T", outMsg)),
-					lax.Uint8("worker", workerID), lax.Error(err))
+				s.Debug.WriteString(fmt.Sprintf("worker %d encoding message type %T: %v", workerID, outMsg, err))
 
 				continue
 			}
 
 			if err := s.broker.Pub(out); err != nil {
-				s.log.Warn("broker", lax.Uint8("worker", workerID), lax.Error(err))
+				s.Debug.WriteString(fmt.Sprintf("worker %d publishing message %v: %v", workerID, inMsg, err))
 			}
 
 			msg.Ack()
 		case <-ctx.Done():
-			s.log.Info("stopped", lax.Uint8("worker", workerID))
+			s.Debug.WriteString(fmt.Sprintf("stopping worker %d", workerID))
 			s.wg.Done()
 
 			return
