@@ -2,7 +2,7 @@ module go.ectobit.com/oxeye
 
 go 1.18
 
-require github.com/nats-io/nats.go v1.18.0
+require github.com/nats-io/nats.go v1.19.0
 
 require (
 	github.com/golang/protobuf v1.5.2 // indirect
