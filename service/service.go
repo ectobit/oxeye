@@ -111,6 +111,10 @@ func (s *Service[IN, OUT]) run(workerID uint8, messages <-chan broker.Message) {
 			s.Debug(fmt.Sprintf("stopping worker %d", workerID))
 			s.wg.Done()
 
+			for range messages {
+				<-messages
+			}
+
 			return
 		}
 	}

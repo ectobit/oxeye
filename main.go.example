@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io"
 	"os"
 
 	"github.com/nats-io/nats.go"
@@ -74,10 +73,10 @@ func main() {
 		ProduceSubject: cfg.NATS.ProduceSubject,
 	}
 	br := broker.NewNatsJetStream(jetStream, brConfig)
-	br.Debug = &logDebug{log} // optional debugging
+	br.Debug = (&logger{log}).Log // optional debugging
 
 	srv := service.NewService[InMsg, OutMsg](uint8(cfg.Concurrency), br, &Job{log: log})
-	srv.Debug = &logDebug{log} // optional debugging
+	srv.Debug = (&logger{log}).Log // optional debugging
 
 	if err := srv.Run(); err != nil {
 		service.Exit("service run", err)
@@ -88,14 +87,10 @@ func main() {
 	log.Flush()
 }
 
-var _ io.StringWriter = (*logDebug)(nil)
-
-type logDebug struct {
-	log lax.Logger
+type logger struct {
+	lax.Logger
 }
 
-func (log *logDebug) WriteString(s string) (n int, err error) {
-	log.log.Debug(s)
-
-	return len(s), nil
+func (l *logger) Log(s string) {
+	l.Debug(s)
 }
