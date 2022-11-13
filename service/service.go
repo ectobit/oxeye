@@ -2,11 +2,9 @@
 package service
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"os/signal"
 	"sync"
@@ -29,9 +27,10 @@ type Job[IN, OUT any] interface {
 type Service[IN, OUT any] struct {
 	concurrency uint8
 	broker      broker.Broker
+	done        chan struct{}
 	wg          sync.WaitGroup
 	job         Job[IN, OUT]
-	Debug       io.StringWriter
+	Debug       func(s string)
 }
 
 // NewService creates new service.
@@ -39,8 +38,9 @@ func NewService[IN, OUT any](concurrency uint8, broker broker.Broker, job Job[IN
 	return &Service[IN, OUT]{
 		concurrency: concurrency,
 		broker:      broker,
+		done:        make(chan struct{}),
 		job:         job,
-		Debug:       io.Discard.(io.StringWriter),
+		Debug:       func(string) {},
 	}
 }
 
@@ -49,41 +49,38 @@ func (s *Service[IN, OUT]) Run() error {
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	s.Debug(fmt.Sprintf("starting worker pool with %d workers", s.concurrency))
 
-	s.Debug.WriteString(fmt.Sprintf("starting worker pool with %d workers", s.concurrency)) //nolint:errcheck
-
-	sub, err := s.broker.Sub(ctx)
+	sub, err := s.broker.Sub()
 	if err != nil {
 		return fmt.Errorf("broker: %w", err)
 	}
 
 	for workerID := uint8(1); workerID <= s.concurrency; workerID++ {
-		go s.run(ctx, workerID, sub)
+		go s.run(workerID, sub)
 	}
 
 	<-signals
-	s.Debug.WriteString("graceful shutdown") //nolint:errcheck
+	s.Debug("graceful shutdown")
 	s.wg.Wait()
+	s.broker.Exit()
 
 	return nil
 }
 
-func (s *Service[IN, OUT]) run(ctx context.Context, workerID uint8, messages <-chan broker.Message) {
-	s.Debug.WriteString(fmt.Sprintf("starting worker %d", workerID)) //nolint:errcheck
+func (s *Service[IN, OUT]) run(workerID uint8, messages <-chan broker.Message) {
+	s.Debug(fmt.Sprintf("starting worker %d", workerID))
 	s.wg.Add(1)
 
 	for {
 		select {
 		case msg := <-messages:
-			s.Debug.WriteString(fmt.Sprintf("worker %d executing job", workerID)) //nolint:errcheck
+			s.Debug(fmt.Sprintf("worker %d executing job", workerID))
 
 			var inMsg IN
 
 			if err := json.Unmarshal(msg.Data, &inMsg); err != nil {
-				//nolint:errcheck
-				s.Debug.WriteString(fmt.Sprintf("worker %d decoding message type %T: %v", workerID, inMsg, err))
+				s.Debug(fmt.Sprintf("worker %d decoding message type %T: %v", workerID, inMsg, err))
 
 				continue
 			}
@@ -100,20 +97,18 @@ func (s *Service[IN, OUT]) run(ctx context.Context, workerID uint8, messages <-c
 
 			out, err := json.Marshal(outMsg)
 			if err != nil {
-				//nolint:errcheck
-				s.Debug.WriteString(fmt.Sprintf("worker %d encoding message type %T: %v", workerID, outMsg, err))
+				s.Debug(fmt.Sprintf("worker %d encoding message type %T: %v", workerID, outMsg, err))
 
 				continue
 			}
 
 			if err := s.broker.Pub(out); err != nil {
-				//nolint:errcheck
-				s.Debug.WriteString(fmt.Sprintf("worker %d publishing message %v: %v", workerID, inMsg, err))
+				s.Debug(fmt.Sprintf("worker %d publishing message %v: %v", workerID, inMsg, err))
 			}
 
 			msg.Ack()
-		case <-ctx.Done():
-			s.Debug.WriteString(fmt.Sprintf("stopping worker %d", workerID)) //nolint:errcheck
+		case <-s.done:
+			s.Debug(fmt.Sprintf("stopping worker %d", workerID))
 			s.wg.Done()
 
 			return

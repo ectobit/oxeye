@@ -2,11 +2,16 @@
 
 lint:
 	@golangci-lint run --exclude-use-default=false --enable-all \
-		--disable golint \
 		--disable interfacer \
-		--disable maligned \
 		--disable scopelint \
-	    --disable exhaustivestruct
+		--disable ifshort \
+		--disable maligned \
+		--disable nosnakecase \
+		--disable golint \
+	    --disable exhaustivestruct \
+		--disable deadcode \
+		--disable structcheck \
+		--disable varcheck
 
 start:
 	@docker-compose up --build

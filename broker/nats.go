@@ -1,9 +1,8 @@
 package broker
 
 import (
-	"context"
 	"fmt"
-	"io"
+	"sync"
 	"time"
 
 	"github.com/nats-io/nats.go"
@@ -21,7 +20,9 @@ var _ Broker = (*NatsJetStream)(nil)
 type NatsJetStream struct {
 	c      nats.JetStreamContext
 	config *NatsJetStreamConfig
-	Debug  io.StringWriter
+	wg     sync.WaitGroup
+	done   chan struct{}
+	Debug  func(s string)
 }
 
 // NatsJetStreamConfig contains NatsJetStream configuration parameters.
@@ -38,7 +39,7 @@ type NatsJetStreamConfig struct {
 	MaxRedeliveries uint8
 }
 
-// NewNatsJetStream creates new NATS JetStream broker.
+// NewNatsJetStream creates new NATS JetStream broker implementing broker.Broker interface.
 func NewNatsJetStream(client nats.JetStreamContext, config *NatsJetStreamConfig) *NatsJetStream {
 	if config.AckWait == 0 {
 		config.AckWait = defaultAckWait
@@ -48,15 +49,16 @@ func NewNatsJetStream(client nats.JetStreamContext, config *NatsJetStreamConfig)
 		config.MaxRedeliveries = 2
 	}
 
-	return &NatsJetStream{
+	return &NatsJetStream{ //nolint:exhaustruct
 		c:      client,
 		config: config,
-		Debug:  io.Discard.(io.StringWriter), //nolint:errcheck
+		done:   make(chan struct{}),
+		Debug:  func(string) {},
 	}
 }
 
-// Sub subscribes to broker and returns a channel to receive messages.
-func (b *NatsJetStream) Sub(ctx context.Context) (<-chan Message, error) {
+// Sub implements broker.Broker interface.
+func (b *NatsJetStream) Sub() (<-chan Message, error) {
 	messages := make(chan Message)
 	natsCh := make(chan *nats.Msg, consumeMessageChannelSize)
 
@@ -77,6 +79,8 @@ func (b *NatsJetStream) Sub(ctx context.Context) (<-chan Message, error) {
 		return nil, fmt.Errorf("subscribe: %w", err)
 	}
 
+	b.wg.Add(1)
+
 	go func() {
 		for {
 			select {
@@ -85,27 +89,34 @@ func (b *NatsJetStream) Sub(ctx context.Context) (<-chan Message, error) {
 					Data: msg.Data,
 					Ack: func() {
 						if err := msg.Ack(); err != nil {
-							b.Debug.WriteString(fmt.Sprintf("ack: %s", err)) //nolint:errcheck
+							b.Debug(fmt.Sprintf("ack: %s", err))
 						}
 					},
 					InProgress: func() {
 						if err := msg.InProgress(); err != nil {
-							b.Debug.WriteString(fmt.Sprintf("in progress: %s", err)) //nolint:errcheck
+							b.Debug(fmt.Sprintf("in progress: %s", err))
 						}
 					},
 				}
-			case <-ctx.Done():
-				b.Debug.WriteString("stopping consumer") //nolint:errcheck
+			case <-b.done:
+				defer b.wg.Done()
+
+				b.Debug("stopping consumer")
 
 				if err := sub.Unsubscribe(); err != nil {
-					b.Debug.WriteString(fmt.Sprintf("unsubscribe: %s", err)) //nolint:errcheck
+					b.Debug(fmt.Sprintf("unsubscribe: %s", err))
 				}
 
 				if err := sub.Drain(); err != nil {
-					b.Debug.WriteString(fmt.Sprintf("drain: %s", err)) //nolint:errcheck
+					b.Debug(fmt.Sprintf("drain: %s", err))
 				}
 
 				close(natsCh)
+
+				for range natsCh {
+					<-natsCh
+				}
+
 				close(messages)
 
 				return
@@ -116,14 +127,20 @@ func (b *NatsJetStream) Sub(ctx context.Context) (<-chan Message, error) {
 	return messages, nil
 }
 
-// Pub synchronously publishes a message to broker.
+// Pub implements broker.Broker interface.
 func (b *NatsJetStream) Pub(data []byte) error {
 	pub, err := b.c.Publish(b.config.ProduceSubject, data)
 	if err != nil {
 		return fmt.Errorf("publish: %w", err)
 	}
 
-	b.Debug.WriteString(fmt.Sprintf("publish stream: %s sequence: %d", pub.Stream, pub.Sequence)) //nolint:errcheck
+	b.Debug(fmt.Sprintf("publish stream: %s sequence: %d", pub.Stream, pub.Sequence))
 
 	return nil
+}
+
+// Exit implements broker.Broker interface.
+func (b *NatsJetStream) Exit() {
+	close(b.done)
+	b.wg.Wait()
 }

@@ -1,8 +1,6 @@
 // Package broker contains message broker abstraction and NATS JetStream broker implementation.
 package broker
 
-import "context"
-
 // Message contains data from the broker.
 type Message struct {
 	Data       []byte
@@ -12,6 +10,10 @@ type Message struct {
 
 // Broker defines common broker methods.
 type Broker interface {
-	Sub(context.Context) (<-chan Message, error)
+	// Sub subscribes to broker and returns a channel to receive messages.
+	Sub() (<-chan Message, error)
+	// Pub synchronously publishes a message to broker.
 	Pub([]byte) error
+	// Exit gracefully shuts down subscriber.
+	Exit()
 }
