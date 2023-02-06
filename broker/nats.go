@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	consumeMessageChannelSize = 64
+	consumeMessageChannelSize = 256
 	defaultAckWait            = 60 * time.Second
 )
 
