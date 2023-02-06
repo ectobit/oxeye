@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	defaultAckWait = 60 * time.Second
+	defaultAckWait            = 60 * time.Second
+	defaultReceiveChannelSize = 128
 )
 
 var _ Broker = (*NatsJetStream)(nil)
@@ -32,6 +33,8 @@ type NatsJetStreamConfig struct {
 	ConsumerGroup string
 	// Produce into this subject
 	ProduceSubject string
+	// ReceiveChannelSize will prevent dropping messages caused by th slow consumer.
+	ReceiveChannelSize int
 	// How long to wait for ACK. If crossed, message will be redelivered. Default 60.s
 	AckWait time.Duration
 	// MaxRedeliveries defines how many times message will be redelivered if not acknowledged. Default 2.
@@ -48,6 +51,10 @@ func NewNatsJetStream(client nats.JetStreamContext, config *NatsJetStreamConfig)
 		config.MaxRedeliveries = 2
 	}
 
+	if config.ReceiveChannelSize == 0 {
+		config.ReceiveChannelSize = defaultReceiveChannelSize
+	}
+
 	return &NatsJetStream{ //nolint:exhaustruct
 		c:      client,
 		config: config,
@@ -59,7 +66,7 @@ func NewNatsJetStream(client nats.JetStreamContext, config *NatsJetStreamConfig)
 // Sub implements broker.Broker interface.
 func (b *NatsJetStream) Sub() (<-chan Message, error) { //nolint:funlen,cyclop
 	messages := make(chan Message)
-	natsCh := make(chan *nats.Msg)
+	natsCh := make(chan *nats.Msg, b.config.ReceiveChannelSize)
 
 	var sub *nats.Subscription
 

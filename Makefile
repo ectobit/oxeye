@@ -11,6 +11,9 @@ lint:
 	    --disable exhaustivestruct \
 		--disable deadcode \
 		--disable structcheck \
+		--disable rowserrcheck \
+		--disable sqlclosecheck \
+		--disable wastedassign \
 		--disable varcheck
 
 start:
