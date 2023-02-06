@@ -35,6 +35,8 @@ type NatsJetStreamConfig struct {
 	ProduceSubject string
 	// ReceiveChannelSize will prevent dropping messages caused by th slow consumer.
 	ReceiveChannelSize int
+	// Limit for pending messages. Default is -1 which means unlimited.
+	PendingLimit int
 	// How long to wait for ACK. If crossed, message will be redelivered. Default 60.s
 	AckWait time.Duration
 	// MaxRedeliveries defines how many times message will be redelivered if not acknowledged. Default 2.
@@ -45,6 +47,10 @@ type NatsJetStreamConfig struct {
 func NewNatsJetStream(client nats.JetStreamContext, config *NatsJetStreamConfig) *NatsJetStream {
 	if config.AckWait == 0 {
 		config.AckWait = defaultAckWait
+	}
+
+	if config.PendingLimit == 0 {
+		config.PendingLimit = -1
 	}
 
 	if config.MaxRedeliveries == 0 {
@@ -64,7 +70,7 @@ func NewNatsJetStream(client nats.JetStreamContext, config *NatsJetStreamConfig)
 }
 
 // Sub implements broker.Broker interface.
-func (b *NatsJetStream) Sub() (<-chan Message, error) { //nolint:funlen,cyclop
+func (b *NatsJetStream) Sub() (<-chan Message, error) { //nolint:funlen,cyclop,gocognit
 	messages := make(chan Message)
 	natsCh := make(chan *nats.Msg, b.config.ReceiveChannelSize)
 
@@ -82,6 +88,10 @@ func (b *NatsJetStream) Sub() (<-chan Message, error) { //nolint:funlen,cyclop
 	}
 
 	if err != nil {
+		return nil, fmt.Errorf("subscribe: %w", err)
+	}
+
+	if err = sub.SetPendingLimits(b.config.PendingLimit, -1); err != nil {
 		return nil, fmt.Errorf("subscribe: %w", err)
 	}
 
