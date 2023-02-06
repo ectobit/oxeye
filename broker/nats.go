@@ -9,8 +9,7 @@ import (
 )
 
 const (
-	consumeMessageChannelSize = 64
-	defaultAckWait            = 60 * time.Second
+	defaultAckWait = 60 * time.Second
 )
 
 var _ Broker = (*NatsJetStream)(nil)
@@ -58,9 +57,9 @@ func NewNatsJetStream(client nats.JetStreamContext, config *NatsJetStreamConfig)
 }
 
 // Sub implements broker.Broker interface.
-func (b *NatsJetStream) Sub() (<-chan Message, error) {
+func (b *NatsJetStream) Sub() (<-chan Message, error) { //nolint:funlen,cyclop
 	messages := make(chan Message)
-	natsCh := make(chan *nats.Msg, consumeMessageChannelSize)
+	natsCh := make(chan *nats.Msg)
 
 	var sub *nats.Subscription
 
