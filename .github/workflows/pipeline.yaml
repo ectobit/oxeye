@@ -9,6 +9,7 @@ jobs:
   check:
     uses: ectobit/reusable-workflows/.github/workflows/go-check.yaml@main
     with:
+      lint-command: make lint
       test-command: make test
   # test: # example how nats may be used for real testing
   #   runs-on: ubuntu-latest

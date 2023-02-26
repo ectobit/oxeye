@@ -1,19 +1,17 @@
 .PHONY: lint start stop test test-cov
 
 lint:
-	@golangci-lint run --exclude-use-default=false --enable-all \
-		--disable interfacer \
-		--disable scopelint \
+	@golangci-lint run \
+		--enable-all \
+		--disable deadcode \
+		--disable exhaustivestruct \
+		--disable golint \
 		--disable ifshort \
+		--disable interfacer \
 		--disable maligned \
 		--disable nosnakecase \
-		--disable golint \
-	    --disable exhaustivestruct \
-		--disable deadcode \
+		--disable scopelint \
 		--disable structcheck \
-		--disable rowserrcheck \
-		--disable sqlclosecheck \
-		--disable wastedassign \
 		--disable varcheck
 
 start:
@@ -28,3 +26,7 @@ test:
 test-cov:
 	@go test -coverprofile=coverage.out ./...
 	@go tool cover -func coverage.out
+
+update-deps:
+	@go get -u all
+	@go mod tidy
