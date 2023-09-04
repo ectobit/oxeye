@@ -35,7 +35,7 @@ type Service[IN, OUT any] struct {
 
 // NewService creates new service.
 func NewService[IN, OUT any](concurrency uint8, broker broker.Broker, job Job[IN, OUT]) *Service[IN, OUT] {
-	return &Service[IN, OUT]{
+	return &Service[IN, OUT]{ //nolint:exhaustruct
 		concurrency: concurrency,
 		broker:      broker,
 		done:        make(chan struct{}),
