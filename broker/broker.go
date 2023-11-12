@@ -13,7 +13,7 @@ type Broker interface {
 	// Sub subscribes to broker and returns a channel to receive messages.
 	Sub() (<-chan Message, error)
 	// Pub synchronously publishes a message to broker.
-	Pub([]byte) error
+	Pub(message []byte) error
 	// Exit gracefully shuts down subscriber.
 	Exit()
 }
