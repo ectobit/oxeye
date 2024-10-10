@@ -61,6 +61,7 @@ func (s *Service[IN, OUT]) Run() error {
 	}
 
 	<-signals
+	close(s.done)
 	s.Debug("graceful shutdown")
 	s.wg.Wait()
 	s.broker.Exit()
