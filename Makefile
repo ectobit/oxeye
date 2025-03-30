@@ -1,19 +1,7 @@
 .PHONY: lint start stop test test-cov
 
 lint:
-	@golangci-lint run \
-		--enable-all \
-		--disable deadcode \
-		--disable depguard \
-		--disable exhaustivestruct \
-		--disable golint \
-		--disable ifshort \
-		--disable interfacer \
-		--disable maligned \
-		--disable nosnakecase \
-		--disable scopelint \
-		--disable structcheck \
-		--disable varcheck
+	@golangci-lint run --fix
 
 start:
 	@docker-compose up --build
